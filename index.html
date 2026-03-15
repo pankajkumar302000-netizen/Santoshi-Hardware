@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#f59e0b"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Santoshi HW"/>
+<link rel="manifest" id="manifest-placeholder"/>
+<title>Santoshi Hardware Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:#0f1117; --surface:#181c27; --surface2:#1e2335; --border:#2a3050;
+    --accent:#f59e0b; --accent2:#3b82f6; --success:#10b981; --danger:#ef4444;
+    --purple:#8b5cf6; --text:#e8eaf0; --text2:#8b93b0;
+    --font-head:'Syne',sans-serif; --font-body:'DM Sans',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;display:flex;}
+
+  /* Sidebar */
+  .sidebar{width:230px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
+  .logo{padding:20px;border-bottom:1px solid var(--border);}
+  .logo-icon{font-size:26px;margin-bottom:4px;}
+  .logo h1{font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--accent);}
+  .logo p{font-size:10px;color:var(--text2);margin-top:2px;}
+  .nav{padding:14px 10px;flex:1;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:3px;transition:all 0.2s;color:var(--text2);font-size:13px;font-weight:500;border:1px solid transparent;}
+  .nav-item:hover{background:var(--surface2);color:var(--text);}
+  .nav-item.active{background:rgba(245,158,11,0.12);color:var(--accent);border-color:rgba(245,158,11,0.2);}
+  .nav-item .icon{font-size:16px;width:20px;text-align:center;}
+  .sidebar-footer{padding:14px;border-top:1px solid var(--border);}
+  .shop-info{font-size:10px;color:var(--text2);text-align:center;line-height:1.6;}
+
+  /* PWA install banner */
+  #pwa-banner{display:none;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(59,130,246,0.15));border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:12px 14px;margin-bottom:16px;align-items:center;gap:12px;}
+  #pwa-banner.show{display:flex;}
+  #pwa-banner p{flex:1;font-size:12px;color:var(--text);}
+
+  /* Main */
+  .main{margin-left:230px;flex:1;padding:24px 28px;min-height:100vh;}
+  .page-header{margin-bottom:22px;}
+  .page-header h2{font-family:var(--font-head);font-size:22px;font-weight:800;}
+  .page-header p{color:var(--text2);font-size:12px;margin-top:3px;}
+
+  /* Stats */
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .stat-card.amber::before{background:var(--accent);}
+  .stat-card.blue::before{background:var(--accent2);}
+  .stat-card.green::before{background:var(--success);}
+  .stat-card.red::before{background:var(--danger);}
+  .stat-card.purple::before{background:var(--purple);}
+  .stat-label{font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
+  .stat-value{font-family:var(--font-head);font-size:26px;font-weight:800;}
+  .stat-sub{font-size:11px;color:var(--text2);margin-top:3px;}
+  .stat-icon{position:absolute;right:14px;top:14px;font-size:22px;opacity:0.25;}
+
+  /* Cards */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:18px;}
+  .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .card-title{font-family:var(--font-head);font-size:15px;font-weight:700;}
+
+  /* Buttons */
+  .btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;font-family:var(--font-body);display:inline-flex;align-items:center;gap:5px;}
+  .btn-primary{background:var(--accent);color:#000;}
+  .btn-primary:hover{background:#d97706;}
+  .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-success{background:var(--success);color:#fff;}
+  .btn-whatsapp{background:#25d366;color:#fff;}
+  .btn-whatsapp:hover{background:#1da851;}
+  .btn-upi{background:var(--purple);color:#fff;}
+  .btn-danger{background:var(--danger);color:#fff;padding:5px 10px;font-size:11px;}
+  .btn-sm{padding:5px 10px;font-size:11px;}
+
+  /* Search */
+  .search-row{display:flex;gap:8px;margin-bottom:16px;}
+  .search-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:12px;font-family:var(--font-body);outline:none;transition:border 0.2s;}
+  .search-input:focus{border-color:var(--accent);}
+  .search-input::placeholder{color:var(--text2);}
+
+  /* Table */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{padding:9px 12px;text-align:left;color:var(--text2);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);}
+  td{padding:11px 12px;border-bottom:1px solid rgba(42,48,80,0.5);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,0.02);}
+
+  /* Badges */
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+  .badge-green{background:rgba(16,185,129,0.15);color:var(--success);}
+  .badge-red{background:rgba(239,68,68,0.15);color:var(--danger);}
+  .badge-amber{background:rgba(245,158,11,0.15);color:var(--accent);}
+  .badge-blue{background:rgba(59,130,246,0.15);color:var(--accent2);}
+  .badge-purple{background:rgba(139,92,246,0.15);color:var(--purple);}
+
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:520px;max-height:88vh;overflow-y:auto;animation:slideIn 0.22s ease;}
+  @keyframes slideIn{from{transform:translateY(-18px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .modal h3{font-family:var(--font-head);font-size:17px;font-weight:800;margin-bottom:18px;}
+
+  /* Form */
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .form-group{margin-bottom:12px;}
+  .form-group label{display:block;font-size:11px;color:var(--text2);font-weight:600;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;}
+  .form-control{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:12px;font-family:var(--font-body);outline:none;transition:border 0.2s;}
+  .form-control:focus{border-color:var(--accent);}
+  .form-control option{background:var(--surface2);}
+  .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
+
+  /* Bill */
+  .bill-preview{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:12px;}
+  .bill-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;}
+  .bill-row.total{border-top:1px solid var(--border);margin-top:5px;padding-top:9px;font-weight:700;font-size:14px;color:var(--accent);}
+  .bill-item{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 10px;margin-bottom:7px;font-size:12px;}
+
+  /* Alerts */
+  .alert{padding:10px 14px;border-radius:9px;font-size:12px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .alert-warning{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:var(--accent);}
+  .alert-danger{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--danger);}
+
+  /* Pages */
+  .page{display:none;}
+  .page.active{display:block;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px;}
+
+  /* Chart containers */
+  .chart-box{position:relative;height:220px;}
+
+  /* Customer / Udhaar cards */
+  .customer-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;}
+  .customer-name{font-weight:600;font-size:13px;}
+  .customer-meta{font-size:11px;color:var(--text2);margin-top:2px;}
+
+  .udhaar-card{background:var(--surface2);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 14px;margin-bottom:9px;}
+  .udhaar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .udhaar-amount{font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--danger);}
+  .udhaar-paid{color:var(--success);}
+
+  .scroll-list{max-height:300px;overflow-y:auto;}
+  .scroll-list::-webkit-scrollbar{width:3px;}
+  .scroll-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+  /* Analytics tabs */
+  .tab-row{display:flex;gap:6px;margin-bottom:18px;}
+  .tab{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;background:var(--surface2);color:var(--text2);border:1px solid var(--border);transition:all 0.2s;}
+  .tab.active{background:rgba(245,158,11,0.15);color:var(--accent);border-color:rgba(245,158,11,0.3);}
+
+  /* UPI status */
+  .payment-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+  .payment-paid{background:rgba(16,185,129,0.15);color:var(--success);}
+  .payment-udhaar{background:rgba(239,68,68,0.15);color:var(--danger);}
+  .payment-upi{background:rgba(139,92,246,0.15);color:var(--purple);}
+  .payment-cash{background:rgba(245,158,11,0.15);color:var(--accent);}
+
+  @media print{
+    .sidebar,.page-header,.no-print{display:none!important;}
+    body{background:#fff;color:#000;margin-left:0!important;}
+    .main{margin-left:0!important;padding:10px!important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🔧</div>
+    <h1>Santoshi Hardware</h1>
+    <p>Wholesale & Retail Store</p>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('analytics',this)"><span class="icon">📈</span> Analytics</div>
+    <div class="nav-item" onclick="showPage('products',this)"><span class="icon">📦</span> Products</div>
+    <div class="nav-item" onclick="showPage('stock',this)"><span class="icon">🗄️</span> Stock</div>
+    <div class="nav-item" onclick="showPage('billing',this)"><span class="icon">🧾</span> Billing</div>
+    <div class="nav-item" onclick="showPage('udhaar',this)"><span class="icon">💳</span> Udhaar / UPI</div>
+    <div class="nav-item" onclick="showPage('customers',this)"><span class="icon">👥</span> Customers</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="shop-info">📍 Santoshi Hardware Store<br/>Himachal Pradesh 176045<br/><span style="color:var(--accent);">v2.0</span></div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- PWA Banner -->
+  <div id="pwa-banner">
+    <span style="font-size:22px;">📱</span>
+    <p><strong>Phone mein Install karein!</strong><br/>Seedha home screen pe app jaisi feel milegi.</p>
+    <button class="btn btn-primary" onclick="installPWA()">Install</button>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('pwa-banner').classList.remove('show')">✕</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-header"><h2>📊 Dashboard</h2><p>Aaj ka poora overview</p></div>
+    <div class="stats-grid">
+      <div class="stat-card amber"><div class="stat-icon">📦</div><div class="stat-label">Products</div><div class="stat-value" id="stat-products">0</div><div class="stat-sub">Total items</div></div>
+      <div class="stat-card green"><div class="stat-icon">💰</div><div class="stat-label">Aaj ki Kamai</div><div class="stat-value" id="stat-today">₹0</div><div class="stat-sub">Today sales</div></div>
+      <div class="stat-card blue"><div class="stat-icon">🧾</div><div class="stat-label">Total Bills</div><div class="stat-value" id="stat-bills">0</div><div class="stat-sub">Generated</div></div>
+      <div class="stat-card red"><div class="stat-icon">💳</div><div class="stat-label">Udhaar Baaki</div><div class="stat-value" id="stat-udhaar">₹0</div><div class="stat-sub">Due amount</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><div class="card-title">⚠️ Low Stock Alert</div></div>
+        <div id="low-stock-list"><div style="color:var(--text2);font-size:12px;">✅ Sab theek hai!</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🧾 Recent Bills</div></div>
+        <div id="recent-bills-list"><div style="color:var(--text2);font-size:12px;">Koi bill nahi.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="page-analytics" class="page">
+    <div class="page-header"><h2>📈 Sales Analytics</h2><p>Apni dukaan ki performance dekhein</p></div>
+    <div class="tab-row">
+      <div class="tab active" onclick="switchAnalytics('weekly',this)">Is Hafte</div>
+      <div class="tab" onclick="switchAnalytics('monthly',this)">Is Mahine</div>
+      <div class="tab" onclick="switchAnalytics('products',this)">Top Products</div>
+      <div class="tab" onclick="switchAnalytics('payment',this)">Payment Mode</div>
+    </div>
+    <div class="three-col">
+      <div class="stat-card green"><div class="stat-label">Total Revenue</div><div class="stat-value" id="an-revenue">₹0</div><div class="stat-sub">Sabhi bills</div></div>
+      <div class="stat-card blue"><div class="stat-label">Avg Bill</div><div class="stat-value" id="an-avg">₹0</div><div class="stat-sub">Per transaction</div></div>
+      <div class="stat-card amber"><div class="stat-label">Best Day</div><div class="stat-value" id="an-best" style="font-size:16px;">—</div><div class="stat-sub">Sabse zyada kamai</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-title" style="margin-bottom:14px;" id="chart1-title">📅 Weekly Sales</div><div class="chart-box"><canvas id="chart1"></canvas></div></div>
+      <div class="card"><div class="card-title" style="margin-bottom:14px;" id="chart2-title">🏆 Top Products</div><div class="chart-box"><canvas id="chart2"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div id="page-products" class="page">
+    <div class="page-header"><h2>📦 Products</h2><p>Inventory manage karein</p></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Product List</div><button class="btn btn-primary" onclick="openModal('addProductModal')">➕ Add Product</button></div>
+      <div class="search-row">
+        <input type="text" class="search-input" placeholder="🔍 Product dhundein..." oninput="filterProducts(this.value)"/>
+        <select class="form-control" style="width:150px;" onchange="filterByCategory(this.value)">
+          <option value="">Sabhi Categories</option>
+          <option>Tools</option><option>Electrical</option><option>Plumbing</option>
+          <option>Paints</option><option>Fasteners</option><option>Cement</option><option>Other</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>#</th><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="products-tbody"><tr><td colspan="7" style="color:var(--text2);text-align:center;padding:20px;">Koi product nahi.</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STOCK -->
+  <div id="page-stock" class="page">
+    <div class="page-header"><h2>🗄️ Stock Management</h2><p>Maal aana jaana track karein</p></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Stock Overview</div><button class="btn btn-secondary" onclick="openModal('updateStockModal')">🔄 Stock Update</button></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Min Level</th><th>Status</th><th>Quick Update</th></tr></thead>
+        <tbody id="stock-tbody"><tr><td colspan="6" style="color:var(--text2);text-align:center;padding:20px;">Pehle products add karein.</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILLING -->
+  <div id="page-billing" class="page">
+    <div class="page-header"><h2>🧾 Billing</h2><p>Bill banao aur share karo</p></div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px;">Naya Bill</div>
+        <div class="form-group"><label>Customer</label>
+          <select class="form-control" id="bill-customer"><option value="">-- Walk-in Customer --</option></select></div>
+        <div class="form-group"><label>Payment Mode</label>
+          <select class="form-control" id="bill-payment">
+            <option value="cash">💵 Cash</option>
+            <option value="upi">📱 UPI</option>
+            <option value="udhaar">📋 Udhaar (Baad mein)</option>
+          </select></div>
+        <div class="form-group"><label>Product Add Karein</label>
+          <div style="display:flex;gap:7px;">
+            <select class="form-control" id="bill-product"><option value="">-- Product --</option></select>
+            <input type="number" class="form-control" id="bill-qty" placeholder="Qty" style="width:70px;" min="1" value="1"/>
+            <button class="btn btn-primary" onclick="addBillItem()">Add</button>
+          </div>
+        </div>
+        <div id="bill-items-list"></div>
+        <div id="bill-preview" style="display:none;" class="bill-preview">
+          <div class="bill-row"><span>Subtotal:</span><span id="bill-subtotal">₹0</span></div>
+          <div class="bill-row"><span>GST (18%):</span><span id="bill-gst">₹0</span></div>
+          <div class="bill-row total"><span>TOTAL:</span><span id="bill-total">₹0</span></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-success" onclick="generateBill()">✅ Bill Generate</button>
+          <button class="btn btn-secondary" onclick="clearBill()">🗑️ Clear</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px;">Bill History</div>
+        <div class="scroll-list" id="bill-history-list"><div style="color:var(--text2);font-size:12px;">Koi bill nahi.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UDHAAR / UPI -->
+  <div id="page-udhaar" class="page">
+    <div class="page-header"><h2>💳 Udhaar & UPI Track</h2><p>Baaki paise aur payments track karein</p></div>
+    <div class="three-col">
+      <div class="stat-card red"><div class="stat-label">Total Udhaar</div><div class="stat-value" id="u-total">₹0</div><div class="stat-sub">Wapas aana hai</div></div>
+      <div class="stat-card green"><div class="stat-label">UPI Received</div><div class="stat-value" id="u-upi">₹0</div><div class="stat-sub">Digital payments</div></div>
+      <div class="stat-card amber"><div class="stat-label">Cash Sales</div><div class="stat-value" id="u-cash">₹0</div><div class="stat-sub">Haath ka paisa</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📋 Udhaar List</div><div style="font-size:12px;color:var(--text2);">Jo abhi tak nahi diya</div></div>
+      <div id="udhaar-list"><div style="color:var(--text2);font-size:12px;text-align:center;padding:20px;">Koi udhaar nahi hai. 🎉</div></div>
+    </div>
+  </div>
+
+  <!-- CUSTOMERS -->
+  <div id="page-customers" class="page">
+    <div class="page-header"><h2>👥 Customers</h2><p>Customer records manage karein</p></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Customer List</div><button class="btn btn-primary" onclick="openModal('addCustomerModal')">➕ Add Customer</button></div>
+      <div class="search-row"><input type="text" class="search-input" placeholder="🔍 Customer dhundein..." oninput="filterCustomers(this.value)"/></div>
+      <div id="customers-list"><div style="color:var(--text2);font-size:12px;text-align:center;padding:20px;">Koi customer nahi.</div></div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+
+<!-- MODALS -->
+
+<!-- Add Product -->
+<div class="modal-overlay" id="addProductModal">
+  <div class="modal">
+    <h3>📦 Naya Product</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Name *</label><input class="form-control" id="p-name" placeholder="Hammer, Wire..."/></div>
+      <div class="form-group"><label>Category *</label>
+        <select class="form-control" id="p-cat"><option>Tools</option><option>Electrical</option><option>Plumbing</option><option>Paints</option><option>Fasteners</option><option>Cement</option><option>Other</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Price (₹) *</label><input class="form-control" id="p-price" type="number" placeholder="0"/></div>
+      <div class="form-group"><label>Stock *</label><input class="form-control" id="p-stock" type="number" placeholder="0"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Min Stock Level</label><input class="form-control" id="p-min" type="number" placeholder="5"/></div>
+      <div class="form-group"><label>Unit</label>
+        <select class="form-control" id="p-unit"><option>Piece</option><option>Kg</option><option>Meter</option><option>Liter</option><option>Box</option><option>Roll</option><option>Bag</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addProductModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addProduct()">✅ Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Customer -->
+<div class="modal-overlay" id="addCustomerModal">
+  <div class="modal">
+    <h3>👤 Naya Customer</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Name *</label><input class="form-control" id="c-name" placeholder="Poora naam"/></div>
+      <div class="form-group"><label>Phone *</label><input class="form-control" id="c-phone" placeholder="10 digit" maxlength="10"/></div>
+    </div>
+    <div class="form-group"><label>Address</label><input class="form-control" id="c-address" placeholder="Ghar ka pata"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Type</label>
+        <select class="form-control" id="c-type"><option>Regular</option><option>Wholesale</option><option>Contractor</option><option>Walk-in</option></select>
+      </div>
+      <div class="form-group"><label>Credit Limit (₹)</label><input class="form-control" id="c-credit" type="number" placeholder="0"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addCustomerModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addCustomer()">✅ Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Update Stock -->
+<div class="modal-overlay" id="updateStockModal">
+  <div class="modal">
+    <h3>🔄 Stock Update</h3>
+    <div class="form-group"><label>Product</label><select class="form-control" id="su-product"></select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Action</label>
+        <select class="form-control" id="su-action">
+          <option value="add">➕ Add (Maal aaya)</option>
+          <option value="remove">➖ Remove</option>
+          <option value="set">📝 Set Exact</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Quantity</label><input class="form-control" id="su-qty" type="number" placeholder="0" min="0"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('updateStockModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="updateStock()">✅ Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mark Udhaar Paid -->
+<div class="modal-overlay" id="payUdhaarModal">
+  <div class="modal">
+    <h3>💰 Udhaar Receive Karein</h3>
+    <div id="udhaar-modal-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;"></div>
+    <div class="form-group"><label>Amount Received (₹)</label><input class="form-control" id="pay-amount" type="number" placeholder="0"/></div>
+    <div class="form-group"><label>Payment Mode</label>
+      <select class="form-control" id="pay-mode"><option value="cash">💵 Cash</option><option value="upi">📱 UPI</option></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('payUdhaarModal')">Cancel</button>
+      <button class="btn btn-success" onclick="receivePayment()">✅ Mark Paid</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bill View / Print -->
+<div class="modal-overlay" id="billViewModal">
+  <div class="modal" style="width:580px;">
+    <h3>🧾 Bill Receipt</h3>
+    <div id="bill-receipt-content"></div>
+    <div class="modal-footer no-print">
+      <button class="btn btn-secondary" onclick="closeModal('billViewModal')">Close</button>
+      <button class="btn btn-whatsapp" id="whatsapp-btn" onclick="shareOnWhatsApp()">📞 WhatsApp</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+let products  = JSON.parse(localStorage.getItem('sh_products')  || '[]');
+let customers = JSON.parse(localStorage.getItem('sh_customers') || '[]');
+let bills     = JSON.parse(localStorage.getItem('sh_bills')     || '[]');
+let currentBillItems = [];
+let currentBillData  = null;
+let activeUdhaarIdx  = null;
+let charts = {};
+
+function save() {
+  localStorage.setItem('sh_products',  JSON.stringify(products));
+  localStorage.setItem('sh_customers', JSON.stringify(customers));
+  localStorage.setItem('sh_bills',     JSON.stringify(bills));
+}
+
+// ===== PWA =====
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('pwa-banner').classList.add('show');
+});
+function installPWA() {
+  if(!deferredPrompt) { alert('Browser mein: Menu > "Add to Home Screen" tap karein!'); return; }
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; document.getElementById('pwa-banner').classList.remove('show'); });
+}
+
+// ===== NAVIGATION =====
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  if(name==='dashboard') updateDashboard();
+  if(name==='analytics') { updateAnalyticsSummary(); renderCharts('weekly'); }
+  if(name==='stock') renderStock();
+  if(name==='billing') { renderBillingDropdowns(); renderBillHistory(); }
+  if(name==='udhaar') renderUdhaarPage();
+  if(name==='customers') renderCustomers();
+  if(name==='products') renderProducts();
+}
+
+// ===== MODAL =====
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if(id==='updateStockModal') {
+    document.getElementById('su-product').innerHTML = products.map((p,i)=>`<option value="${i}">${p.name} (${p.stock})</option>`).join('');
+  }
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ===== PRODUCTS =====
+function addProduct() {
+  const name=document.getElementById('p-name').value.trim();
+  const price=parseFloat(document.getElementById('p-price').value);
+  const stock=parseInt(document.getElementById('p-stock').value);
+  if(!name||!price||isNaN(stock)){alert('Sabhi fields fill karein!');return;}
+  products.push({ id:Date.now(), name, price, stock,
+    category:document.getElementById('p-cat').value,
+    minStock:parseInt(document.getElementById('p-min').value)||5,
+    unit:document.getElementById('p-unit').value });
+  save(); closeModal('addProductModal');
+  ['p-name','p-price','p-stock','p-min'].forEach(id=>document.getElementById(id).value='');
+  renderProducts(); updateDashboard();
+}
+function renderProducts(list) {
+  const tbody=document.getElementById('products-tbody');
+  const data=list||products;
+  if(!data.length){tbody.innerHTML='<tr><td colspan="7" style="color:var(--text2);text-align:center;padding:20px;">Koi product nahi.</td></tr>';return;}
+  tbody.innerHTML=data.map(p=>{
+    const i=products.indexOf(p);
+    const s=p.stock<=0?'<span class="badge badge-red">Out</span>':p.stock<=p.minStock?'<span class="badge badge-amber">Low</span>':'<span class="badge badge-green">OK</span>';
+    return `<tr><td style="color:var(--text2)">${i+1}</td><td><strong>${p.name}</strong><br/><span style="font-size:10px;color:var(--text2)">${p.unit}</span></td><td><span class="badge badge-blue">${p.category}</span></td><td><strong>₹${p.price.toFixed(2)}</strong></td><td>${p.stock}</td><td>${s}</td><td><button class="btn btn-danger" onclick="deleteProduct(${i})">🗑️</button></td></tr>`;
+  }).join('');
+}
+function deleteProduct(i){if(confirm('Delete karein?')){products.splice(i,1);save();renderProducts();updateDashboard();}}
+function filterProducts(q){renderProducts(products.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())));}
+function filterByCategory(cat){renderProducts(cat?products.filter(p=>p.category===cat):products);}
+
+// ===== STOCK =====
+function renderStock() {
+  const tbody=document.getElementById('stock-tbody');
+  if(!products.length){tbody.innerHTML='<tr><td colspan="6" style="color:var(--text2);text-align:center;padding:20px;">Pehle products add karein.</td></tr>';return;}
+  tbody.innerHTML=products.map((p,i)=>{
+    const s=p.stock<=0?'<span class="badge badge-red">Out of Stock</span>':p.stock<=p.minStock?'<span class="badge badge-amber">Low Stock</span>':'<span class="badge badge-green">In Stock</span>';
+    return `<tr><td><strong>${p.name}</strong></td><td>${p.category}</td><td><strong>${p.stock} ${p.unit}</strong></td><td>${p.minStock}</td><td>${s}</td><td><button class="btn btn-secondary btn-sm" onclick="quickStock(${i},-1)">➖</button><button class="btn btn-primary btn-sm" style="margin-left:4px;" onclick="quickStock(${i},1)">➕</button></td></tr>`;
+  }).join('');
+}
+function quickStock(i,d){products[i].stock=Math.max(0,products[i].stock+d);save();renderStock();updateDashboard();}
+function updateStock() {
+  const idx=parseInt(document.getElementById('su-product').value);
+  const action=document.getElementById('su-action').value;
+  const qty=parseInt(document.getElementById('su-qty').value);
+  if(isNaN(qty)||qty<0){alert('Valid quantity dalein!');return;}
+  if(action==='add') products[idx].stock+=qty;
+  else if(action==='remove') products[idx].stock=Math.max(0,products[idx].stock-qty);
+  else products[idx].stock=qty;
+  save();closeModal('updateStockModal');renderStock();updateDashboard();
+}
+
+// ===== BILLING =====
+function renderBillingDropdowns() {
+  document.getElementById('bill-customer').innerHTML='<option value="">-- Walk-in Customer --</option>'+customers.map((c,i)=>`<option value="${i}">${c.name} — ${c.phone}</option>`).join('');
+  document.getElementById('bill-product').innerHTML='<option value="">-- Product chunein --</option>'+products.map((p,i)=>`<option value="${i}">${p.name} — ₹${p.price} (${p.stock} left)</option>`).join('');
+}
+function addBillItem() {
+  const pIdx=parseInt(document.getElementById('bill-product').value);
+  const qty=parseInt(document.getElementById('bill-qty').value);
+  if(isNaN(pIdx)||isNaN(qty)||qty<1){alert('Product aur quantity select karein!');return;}
+  const p=products[pIdx];
+  if(qty>p.stock){alert(`Sirf ${p.stock} ${p.unit} stock hai!`);return;}
+  const ex=currentBillItems.find(i=>i.pIdx===pIdx);
+  if(ex) ex.qty+=qty; else currentBillItems.push({pIdx,name:p.name,price:p.price,unit:p.unit,qty});
+  renderBillItems();
+}
+function renderBillItems() {
+  const c=document.getElementById('bill-items-list');
+  if(!currentBillItems.length){c.innerHTML='';document.getElementById('bill-preview').style.display='none';return;}
+  c.innerHTML=currentBillItems.map((item,i)=>`<div class="bill-item"><span>${item.name}</span><span style="color:var(--text2)">${item.qty} ${item.unit}</span><span>₹${(item.price*item.qty).toFixed(2)}</span><button class="btn btn-danger" style="padding:3px 7px;" onclick="removeBillItem(${i})">✕</button></div>`).join('');
+  const sub=currentBillItems.reduce((s,i)=>s+i.price*i.qty,0);
+  const gst=sub*0.18;
+  document.getElementById('bill-subtotal').textContent='₹'+sub.toFixed(2);
+  document.getElementById('bill-gst').textContent='₹'+gst.toFixed(2);
+  document.getElementById('bill-total').textContent='₹'+(sub+gst).toFixed(2);
+  document.getElementById('bill-preview').style.display='block';
+}
+function removeBillItem(i){currentBillItems.splice(i,1);renderBillItems();}
+
+function generateBill() {
+  if(!currentBillItems.length){alert('Pehle items add karein!');return;}
+  const cIdx=document.getElementById('bill-customer').value;
+  const cName=cIdx!==''?customers[cIdx].name:'Walk-in Customer';
+  const cPhone=cIdx!==''?customers[cIdx].phone:'';
+  const payMode=document.getElementById('bill-payment').value;
+  const sub=currentBillItems.reduce((s,i)=>s+i.price*i.qty,0);
+  const gst=sub*0.18; const total=sub+gst;
+  const bill={
+    id:'BILL-'+Date.now(),
+    date:new Date().toLocaleDateString('en-IN'),
+    time:new Date().toLocaleTimeString('en-IN'),
+    dateRaw:new Date().toISOString().split('T')[0],
+    customer:cName, customerPhone:cPhone,
+    items:[...currentBillItems],
+    subtotal:sub, gst, total,
+    payMode, paid: payMode!=='udhaar'
+  };
+  currentBillItems.forEach(item=>{products[item.pIdx].stock-=item.qty;});
+  bills.unshift(bill);
+  save(); currentBillData=bill;
+  showBillReceipt(bill); clearBill(); renderBillHistory(); updateDashboard();
+}
+
+function showBillReceipt(bill) {
+  const modeTag = bill.payMode==='upi'?'<span class="payment-tag payment-upi">📱 UPI</span>':bill.payMode==='udhaar'?'<span class="payment-tag payment-udhaar">📋 Udhaar</span>':'<span class="payment-tag payment-cash">💵 Cash</span>';
+  document.getElementById('bill-receipt-content').innerHTML=`
+    <div style="text-align:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <div style="font-size:20px;">🔧</div>
+      <div style="font-family:var(--font-head);font-size:17px;font-weight:800;color:var(--accent);">Santoshi Hardware Store</div>
+      <div style="font-size:11px;color:var(--text2);">Wholesale & Retail | Himachal Pradesh 176045</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:12px;">
+      <div><strong style="color:var(--text);">Bill No:</strong> ${bill.id}</div>
+      <div><strong style="color:var(--text);">Date:</strong> ${bill.date} ${bill.time}</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:12px;display:flex;justify-content:space-between;align-items:center;">
+      <span><strong>Customer:</strong> ${bill.customer}${bill.customerPhone?' | 📱 '+bill.customerPhone:''}</span>
+      ${modeTag}
+    </div>
+    <table style="width:100%;font-size:12px;">
+      <thead><tr>
+        <th style="text-align:left;padding:7px 0;border-bottom:1px solid var(--border);color:var(--text2);">Item</th>
+        <th style="text-align:right;padding:7px 0;border-bottom:1px solid var(--border);color:var(--text2);">Qty</th>
+        <th style="text-align:right;padding:7px 0;border-bottom:1px solid var(--border);color:var(--text2);">Rate</th>
+        <th style="text-align:right;padding:7px 0;border-bottom:1px solid var(--border);color:var(--text2);">Amount</th>
+      </tr></thead>
+      <tbody>${bill.items.map(i=>`<tr><td style="padding:7px 0;">${i.name}</td><td style="text-align:right;padding:7px 0;">${i.qty} ${i.unit}</td><td style="text-align:right;padding:7px 0;">₹${i.price}</td><td style="text-align:right;padding:7px 0;">₹${(i.price*i.qty).toFixed(2)}</td></tr>`).join('')}</tbody>
+    </table>
+    <div class="bill-preview" style="margin-top:12px;">
+      <div class="bill-row"><span>Subtotal:</span><span>₹${bill.subtotal.toFixed(2)}</span></div>
+      <div class="bill-row"><span>GST (18%):</span><span>₹${bill.gst.toFixed(2)}</span></div>
+      <div class="bill-row total"><span>TOTAL:</span><span>₹${bill.total.toFixed(2)}</span></div>
+    </div>
+    <div style="text-align:center;margin-top:14px;font-size:11px;color:var(--text2);">Kharidari ke liye shukriya! 🙏<br/>Santoshi Hardware Store</div>
+  `;
+  currentBillData=bill;
+  openModal('billViewModal');
+}
+
+function clearBill(){currentBillItems=[];renderBillItems();document.getElementById('bill-customer').value='';document.getElementById('bill-product').value='';document.getElementById('bill-qty').value=1;}
+
+function renderBillHistory() {
+  const c=document.getElementById('bill-history-list');
+  if(!bills.length){c.innerHTML='<div style="color:var(--text2);font-size:12px;">Koi bill nahi.</div>';return;}
+  c.innerHTML=bills.slice(0,20).map(b=>{
+    const mode=b.payMode==='upi'?'<span class="payment-tag payment-upi">UPI</span>':b.payMode==='udhaar'?'<span class="payment-tag payment-udhaar">Udhaar</span>':'<span class="payment-tag payment-cash">Cash</span>';
+    return `<div class="customer-card" style="cursor:pointer;" onclick='showBillReceipt(${JSON.stringify(b).replace(/'/g,"&#39;")})'>
+      <div><div class="customer-name">${b.id} ${mode}</div><div class="customer-meta">👤 ${b.customer} | 📅 ${b.date}</div></div>
+      <div style="font-family:var(--font-head);font-weight:700;color:var(--accent);">₹${b.total.toFixed(2)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== WHATSAPP =====
+function shareOnWhatsApp() {
+  if(!currentBillData){alert('Pehle bill generate karein!');return;}
+  const b=currentBillData;
+  const items=b.items.map(i=>`  • ${i.name}: ${i.qty} ${i.unit} × ₹${i.price} = ₹${(i.price*i.qty).toFixed(2)}`).join('\n');
+  const mode=b.payMode==='upi'?'📱 UPI':b.payMode==='udhaar'?'📋 Udhaar':'💵 Cash';
+  const msg=`🔧 *Santoshi Hardware Store*\nWholesale & Retail, HP 176045\n\n📄 *Bill No:* ${b.id}\n📅 *Date:* ${b.date}\n👤 *Customer:* ${b.customer}\n💳 *Payment:* ${mode}\n\n📦 *Items:*\n${items}\n\n─────────────────\nSubtotal: ₹${b.subtotal.toFixed(2)}\nGST (18%): ₹${b.gst.toFixed(2)}\n*TOTAL: ₹${b.total.toFixed(2)}*\n─────────────────\nKharidari ke liye shukriya! 🙏`;
+  const phone=b.customerPhone?b.customerPhone.replace(/\D/g,''):'';
+  const url=phone?`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
+}
+
+// ===== UDHAAR / PAYMENT =====
+function renderUdhaarPage() {
+  const udhaars=bills.filter(b=>b.payMode==='udhaar'&&!b.paid);
+  const upiTotal=bills.filter(b=>b.payMode==='upi'&&b.paid).reduce((s,b)=>s+b.total,0);
+  const cashTotal=bills.filter(b=>b.payMode==='cash').reduce((s,b)=>s+b.total,0);
+  const udhaarTotal=udhaars.reduce((s,b)=>s+b.total,0);
+  document.getElementById('u-total').textContent='₹'+udhaarTotal.toFixed(0);
+  document.getElementById('u-upi').textContent='₹'+upiTotal.toFixed(0);
+  document.getElementById('u-cash').textContent='₹'+cashTotal.toFixed(0);
+  const c=document.getElementById('udhaar-list');
+  if(!udhaars.length){c.innerHTML='<div style="color:var(--text2);font-size:12px;text-align:center;padding:20px;">🎉 Koi udhaar nahi hai!</div>';return;}
+  c.innerHTML=udhaars.map(b=>{
+    const bi=bills.indexOf(b);
+    return `<div class="udhaar-card">
+      <div class="udhaar-header">
+        <div><div class="customer-name">👤 ${b.customer}</div><div class="customer-meta">📅 ${b.date} | Bill: ${b.id}</div></div>
+        <div class="udhaar-amount">₹${b.total.toFixed(2)}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${b.items.map(i=>`<span class="badge badge-amber">${i.name} ×${i.qty}</span>`).join('')}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn btn-success btn-sm" onclick="openPayModal(${bi})">💰 Payment Lein</button>
+        <button class="btn btn-whatsapp btn-sm" onclick="sendUdhaarReminder(${bi})">📞 WhatsApp Reminder</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openPayModal(idx) {
+  activeUdhaarIdx=idx;
+  const b=bills[idx];
+  document.getElementById('udhaar-modal-info').innerHTML=`<strong>${b.customer}</strong> ka udhaar: <span style="color:var(--danger);font-weight:700;">₹${b.total.toFixed(2)}</span><br/><span style="font-size:11px;color:var(--text2);">Bill: ${b.id} | Date: ${b.date}</span>`;
+  document.getElementById('pay-amount').value=b.total.toFixed(2);
+  openModal('payUdhaarModal');
+}
+function receivePayment() {
+  if(activeUdhaarIdx===null) return;
+  bills[activeUdhaarIdx].paid=true;
+  bills[activeUdhaarIdx].payMode=document.getElementById('pay-mode').value;
+  bills[activeUdhaarIdx].paidDate=new Date().toLocaleDateString('en-IN');
+  save(); closeModal('payUdhaarModal'); renderUdhaarPage(); updateDashboard();
+  activeUdhaarIdx=null;
+}
+function sendUdhaarReminder(idx) {
+  const b=bills[idx];
+  const msg=`Namaste ${b.customer} ji! 🙏\n\n*Santoshi Hardware Store* se yaad dila rahe hain ki aapka ₹${b.total.toFixed(2)} ka udhaar abhi baaki hai.\n\n📄 Bill No: ${b.id}\n📅 Date: ${b.date}\n\nJaldi payment karein. Dhanyawaad! 🙏`;
+  const phone=b.customerPhone?b.customerPhone.replace(/\D/g,''):'';
+  const url=phone?`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
+}
+
+// ===== CUSTOMERS =====
+function addCustomer() {
+  const name=document.getElementById('c-name').value.trim();
+  const phone=document.getElementById('c-phone').value.trim();
+  if(!name||!phone||phone.length!==10){alert('Naam aur 10-digit phone dalein!');return;}
+  customers.push({id:Date.now(),name,phone,address:document.getElementById('c-address').value,type:document.getElementById('c-type').value,credit:parseFloat(document.getElementById('c-credit').value)||0});
+  save();closeModal('addCustomerModal');
+  ['c-name','c-phone','c-address','c-credit'].forEach(id=>document.getElementById(id).value='');
+  renderCustomers();updateDashboard();renderBillingDropdowns();
+}
+function renderCustomers(list) {
+  const c=document.getElementById('customers-list');
+  const data=list||customers;
+  if(!data.length){c.innerHTML='<div style="color:var(--text2);font-size:12px;text-align:center;padding:20px;">Koi customer nahi.</div>';return;}
+  c.innerHTML=data.map(cu=>{
+    const i=customers.indexOf(cu);
+    const tc={Regular:'badge-green',Wholesale:'badge-blue',Contractor:'badge-amber','Walk-in':'badge-red'}[cu.type]||'badge-green';
+    const udhaarBills=bills.filter(b=>b.customer===cu.name&&b.payMode==='udhaar'&&!b.paid);
+    const due=udhaarBills.reduce((s,b)=>s+b.total,0);
+    return `<div class="customer-card">
+      <div>
+        <div class="customer-name">👤 ${cu.name} <span class="badge ${tc}">${cu.type}</span>${due>0?` <span class="badge badge-red">Udhaar: ₹${due.toFixed(0)}</span>`:''}
+        </div>
+        <div class="customer-meta">📱 ${cu.phone} | 📍 ${cu.address||'—'}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-whatsapp btn-sm" onclick="waCustomer('${cu.phone}')">📞</button>
+        <button class="btn btn-danger" onclick="deleteCustomer(${i})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function waCustomer(phone){window.open(`https://wa.me/91${phone}`,'_blank');}
+function deleteCustomer(i){if(confirm('Delete karein?')){customers.splice(i,1);save();renderCustomers();updateDashboard();}}
+function filterCustomers(q){renderCustomers(customers.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())||c.phone.includes(q)));}
+
+// ===== DASHBOARD =====
+function updateDashboard() {
+  document.getElementById('stat-products').textContent=products.length;
+  document.getElementById('stat-bills').textContent=bills.length;
+  const today=new Date().toLocaleDateString('en-IN');
+  const todaySales=bills.filter(b=>b.date===today).reduce((s,b)=>s+b.total,0);
+  document.getElementById('stat-today').textContent='₹'+todaySales.toFixed(0);
+  const udhaarDue=bills.filter(b=>b.payMode==='udhaar'&&!b.paid).reduce((s,b)=>s+b.total,0);
+  document.getElementById('stat-udhaar').textContent='₹'+udhaarDue.toFixed(0);
+  const lowStock=products.filter(p=>p.stock<=p.minStock);
+  const lowList=document.getElementById('low-stock-list');
+  lowList.innerHTML=lowStock.length?lowStock.map(p=>`<div class="alert ${p.stock<=0?'alert-danger':'alert-warning'}">${p.stock<=0?'🔴':'⚠️'} <strong>${p.name}</strong> — ${p.stock} ${p.unit} bachi</div>`).join(''):'<div style="color:var(--text2);font-size:12px;">✅ Sab theek hai!</div>';
+  const recentList=document.getElementById('recent-bills-list');
+  recentList.innerHTML=bills.length?bills.slice(0,4).map(b=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;"><div><div style="font-weight:600;">${b.customer}</div><div style="font-size:10px;color:var(--text2)">${b.date}</div></div><div style="font-weight:700;color:var(--accent);">₹${b.total.toFixed(2)}</div></div>`).join(''):'<div style="color:var(--text2);font-size:12px;">Koi bill nahi.</div>';
+}
+
+// ===== ANALYTICS =====
+function updateAnalyticsSummary() {
+  const total=bills.reduce((s,b)=>s+b.total,0);
+  const avg=bills.length?total/bills.length:0;
+  document.getElementById('an-revenue').textContent='₹'+Math.round(total).toLocaleString('en-IN');
+  document.getElementById('an-avg').textContent='₹'+Math.round(avg).toLocaleString('en-IN');
+  if(bills.length) {
+    const dayMap={};
+    bills.forEach(b=>{ dayMap[b.date]=(dayMap[b.date]||0)+b.total; });
+    const best=Object.entries(dayMap).sort((a,b)=>b[1]-a[1])[0];
+    document.getElementById('an-best').textContent=best?best[0]:'—';
+  }
+}
+
+function switchAnalytics(type, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderCharts(type);
+}
+
+function destroyChart(id) { if(charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderCharts(type) {
+  destroyChart('chart1'); destroyChart('chart2');
+  const ctx1=document.getElementById('chart1').getContext('2d');
+  const ctx2=document.getElementById('chart2').getContext('2d');
+
+  if(type==='weekly'||type==='monthly') {
+    // Sales over time
+    const days=type==='weekly'?7:30;
+    const labels=[]; const data=[];
+    for(let i=days-1;i>=0;i--) {
+      const d=new Date(); d.setDate(d.getDate()-i);
+      const label=d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+      const dateStr=d.toLocaleDateString('en-IN');
+      labels.push(label);
+      data.push(bills.filter(b=>b.date===dateStr).reduce((s,b)=>s+b.total,0));
+    }
+    document.getElementById('chart1-title').textContent=type==='weekly'?'📅 Weekly Sales':'📅 Monthly Sales';
+    charts['chart1']=new Chart(ctx1,{type:'bar',data:{labels,datasets:[{label:'Sales (₹)',data,backgroundColor:'rgba(245,158,11,0.7)',borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8b93b0',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#8b93b0',font:{size:10},callback:v=>'₹'+v},grid:{color:'rgba(42,48,80,0.5)'}}}}});
+
+    // Top products
+    const prodSales={};
+    bills.forEach(b=>b.items.forEach(i=>{prodSales[i.name]=(prodSales[i.name]||0)+i.qty*i.price;}));
+    const sorted=Object.entries(prodSales).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    document.getElementById('chart2-title').textContent='🏆 Top Products';
+    charts['chart2']=new Chart(ctx2,{type:'bar',data:{labels:sorted.map(s=>s[0]),datasets:[{label:'Revenue',data:sorted.map(s=>s[1]),backgroundColor:['rgba(59,130,246,0.7)','rgba(16,185,129,0.7)','rgba(245,158,11,0.7)','rgba(139,92,246,0.7)','rgba(239,68,68,0.7)','rgba(14,165,233,0.7)'],borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8b93b0',font:{size:10},callback:v=>'₹'+v},grid:{color:'rgba(42,48,80,0.5)'}},y:{ticks:{color:'#8b93b0',font:{size:10}},grid:{display:false}}}}});
+  }
+
+  if(type==='payment') {
+    document.getElementById('chart1-title').textContent='💳 Payment Mode Split';
+    const cash=bills.filter(b=>b.payMode==='cash').reduce((s,b)=>s+b.total,0);
+    const upi=bills.filter(b=>b.payMode==='upi').reduce((s,b)=>s+b.total,0);
+    const udhaar=bills.filter(b=>b.payMode==='udhaar').reduce((s,b)=>s+b.total,0);
+    charts['chart1']=new Chart(ctx1,{type:'doughnut',data:{labels:['💵 Cash','📱 UPI','📋 Udhaar'],datasets:[{data:[cash,upi,udhaar],backgroundColor:['rgba(245,158,11,0.8)','rgba(139,92,246,0.8)','rgba(239,68,68,0.8)'],borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8b93b0',font:{size:11},padding:16}}}}});
+
+    // Bills count per day
+    document.getElementById('chart2-title').textContent='📊 Daily Bill Count';
+    const days=14; const labels=[]; const data=[];
+    for(let i=days-1;i>=0;i--) {
+      const d=new Date(); d.setDate(d.getDate()-i);
+      labels.push(d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
+      data.push(bills.filter(b=>b.date===d.toLocaleDateString('en-IN')).length);
+    }
+    charts['chart2']=new Chart(ctx2,{type:'line',data:{labels,datasets:[{label:'Bills',data,borderColor:'rgba(59,130,246,0.9)',backgroundColor:'rgba(59,130,246,0.1)',tension:0.4,fill:true,pointBackgroundColor:'rgba(59,130,246,1)',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8b93b0',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#8b93b0',font:{size:10}},grid:{color:'rgba(42,48,80,0.5)'}}}}});
+  }
+
+  if(type==='products') {
+    document.getElementById('chart1-title').textContent='📦 Category Revenue';
+    const catMap={};
+    bills.forEach(b=>b.items.forEach(i=>{
+      const p=products.find(p=>p.name===i.name);
+      const cat=p?p.category:'Other';
+      catMap[cat]=(catMap[cat]||0)+i.qty*i.price;
+    }));
+    const cats=Object.keys(catMap); const vals=cats.map(c=>catMap[c]);
+    const colors=['rgba(245,158,11,0.8)','rgba(59,130,246,0.8)','rgba(16,185,129,0.8)','rgba(139,92,246,0.8)','rgba(239,68,68,0.8)','rgba(14,165,233,0.8)','rgba(248,113,113,0.8)'];
+    charts['chart1']=new Chart(ctx1,{type:'pie',data:{labels:cats,datasets:[{data:vals,backgroundColor:colors,borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8b93b0',font:{size:11},padding:12}}}}});
+
+    // Stock levels
+    document.getElementById('chart2-title').textContent='🗄️ Stock Levels';
+    const top=products.slice(0,8);
+    charts['chart2']=new Chart(ctx2,{type:'bar',data:{labels:top.map(p=>p.name.length>10?p.name.slice(0,10)+'...':p.name),datasets:[{label:'Current',data:top.map(p=>p.stock),backgroundColor:top.map(p=>p.stock<=p.minStock?'rgba(239,68,68,0.7)':'rgba(16,185,129,0.7)'),borderRadius:6,borderSkipped:false},{label:'Min',data:top.map(p=>p.minStock),backgroundColor:'rgba(245,158,11,0.3)',borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b93b0',font:{size:10}}}},scales:{x:{ticks:{color:'#8b93b0',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#8b93b0',font:{size:10}},grid:{color:'rgba(42,48,80,0.5)'}}}}});
+  }
+}
+
+// ===== INIT =====
+renderProducts(); renderCustomers(); updateDashboard();
+</script>
+</body>
+</html>
